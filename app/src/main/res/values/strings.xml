@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">DineIN</string>
+
+    <string name="api_key">AIzaSyDFNMs2U-mR4Ap8pqqo20t7_YmJg_7Qx2I</string>
+
+    <string name="permissions_dialog">DineIN needs permission to use your device location to show you nearby restaurants.</string>
+</resources>

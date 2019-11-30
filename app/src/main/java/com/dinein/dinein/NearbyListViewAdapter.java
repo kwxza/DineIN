@@ -7,25 +7,35 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.ArrayList;
+
 import java.util.HashMap;
 
 public class NearbyListViewAdapter extends RecyclerView.Adapter<NearbyListViewAdapter.ListItemViewHolder> {
 
     private ArrayList<HashMap<String,String>> nearbyPlacesList;
 
-    public NearbyListViewAdapter(ArrayList<HashMap<String,String>> nearbyPlacesList) {
+    NearbyListViewAdapter(@Nullable ArrayList<HashMap<String, String>> nearbyPlacesList) {
         this.nearbyPlacesList = nearbyPlacesList;
+    }
+
+    public boolean updateNearbyList(ArrayList<HashMap<String,String>> nearbyPlacesListUpdate) {
+        boolean changed = true;
+        if (this.nearbyPlacesList != null) {
+
+        }
+
+        return changed;
     }
 
     @NonNull
     @Override
     public ListItemViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View listItemView = LayoutInflater.from(parent.getContext()).inflate(R.layout.nearby_list_item, parent, false);
-        ListItemViewHolder listItemViewHolder = new ListItemViewHolder(listItemView);
-        return listItemViewHolder;
+        return new ListItemViewHolder(listItemView);
     }
 
     @Override
@@ -35,14 +45,15 @@ public class NearbyListViewAdapter extends RecyclerView.Adapter<NearbyListViewAd
 
     @Override
     public int getItemCount() {
+        if (nearbyPlacesList == null) {return 0;}
         return nearbyPlacesList.size();
     }
 
-    public class ListItemViewHolder extends RecyclerView.ViewHolder {
+    class ListItemViewHolder extends RecyclerView.ViewHolder {
         RelativeLayout listItemLayout;
         TextView listItemName;
 
-        public ListItemViewHolder(@NonNull View itemView) {
+        ListItemViewHolder(@NonNull View itemView) {
             super(itemView);
 
             listItemLayout = itemView.findViewById(R.id.list_item);

@@ -55,6 +55,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     private LocationRequest locationRequest;
     private GoogleMap map;
     private RecyclerView nearbyListView;
+    private NearbyListViewAdapter nearbyListViewAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -83,6 +84,9 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         // Set up recyclerView of nearbyPlaces
         nearbyListView = findViewById(R.id.nearby_list_view);
+        nearbyListViewAdapter = new NearbyListViewAdapter(null);
+        nearbyListView.setAdapter(nearbyListViewAdapter);
+        nearbyListView.setLayoutManager(new LinearLayoutManager(this));
     }
 
 
@@ -104,8 +108,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             // Check if location settings are enabled
             Log.d(TAG, "checkLocationSettings: location permissions ok, checking if settings enabled");
             locationRequest = LocationRequest.create()
-                    .setInterval(10000)
-                    .setFastestInterval(500)
+                    .setInterval(30000)
+                    .setFastestInterval(30000)
                     .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
 
             LocationSettingsRequest.Builder locationSettingsRequest = new LocationSettingsRequest.Builder().addLocationRequest(locationRequest);
@@ -159,10 +163,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     }
 
     private void updateNearbyListView(ArrayList<HashMap<String,String>> nearbyPlacesList) {
-        NearbyListViewAdapter nearbyListViewAdapter = new NearbyListViewAdapter(nearbyPlacesList);
-        nearbyListView.setAdapter(nearbyListViewAdapter);
-        nearbyListView.setLayoutManager(new LinearLayoutManager(this));
-
+        nearbyListViewAdapter.notifyDataSetChanged();
     }
 
     private void updateMapView(Location location) {
@@ -235,7 +236,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     public void update(Observable observedObject, Object newData) {
         if (newData instanceof ArrayList) {
             ArrayList<HashMap<String,String>> updateList = (ArrayList<HashMap<String,String>>) newData;
-            Log.d(TAG, "update: new list observed");
             updateNearbyListView(updateList);
         }
     }

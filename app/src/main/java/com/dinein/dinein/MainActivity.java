@@ -38,6 +38,7 @@ import com.google.android.gms.tasks.Task;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Observable;
 import java.util.Observer;
 
@@ -56,6 +57,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     private GoogleMap map;
     private RecyclerView nearbyListView;
     private NearbyListViewAdapter nearbyListViewAdapter;
+    private NearbyPlaces nearbyPlaces;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -74,7 +76,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         The mainActivity updates the displayed list
         in response to new data about the places nearby.
         */
-        NearbyPlaces nearbyPlaces = new NearbyPlaces(this);
+        nearbyPlaces = new NearbyPlaces(this);
         nearbyPlaces.addObserver(this);
         foundLocation = new FoundLocation();
         foundLocation.addObserver(nearbyPlaces);
@@ -84,7 +86,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         // Set up recyclerView of nearbyPlaces
         nearbyListView = findViewById(R.id.nearby_list_view);
-        nearbyListViewAdapter = new NearbyListViewAdapter(null);
+        nearbyListViewAdapter = new NearbyListViewAdapter(nearbyPlaces.getNearbyPlacesList());
         nearbyListView.setAdapter(nearbyListViewAdapter);
         nearbyListView.setLayoutManager(new LinearLayoutManager(this));
     }
@@ -108,8 +110,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             // Check if location settings are enabled
             Log.d(TAG, "checkLocationSettings: location permissions ok, checking if settings enabled");
             locationRequest = LocationRequest.create()
-                    .setInterval(30000)
-                    .setFastestInterval(30000)
+                    .setInterval(10000)
+                    .setFastestInterval(500)
                     .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
 
             LocationSettingsRequest.Builder locationSettingsRequest = new LocationSettingsRequest.Builder().addLocationRequest(locationRequest);
@@ -160,10 +162,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     private void getInputLocation() {
 
-    }
-
-    private void updateNearbyListView(ArrayList<HashMap<String,String>> nearbyPlacesList) {
-        nearbyListViewAdapter.notifyDataSetChanged();
     }
 
     private void updateMapView(Location location) {
@@ -234,9 +232,9 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     @Override
     public void update(Observable observedObject, Object newData) {
-        if (newData instanceof ArrayList) {
-            ArrayList<HashMap<String,String>> updateList = (ArrayList<HashMap<String,String>>) newData;
-            updateNearbyListView(updateList);
+        if (observedObject instanceof NearbyPlaces) {
+            nearbyListViewAdapter.updateNearbyPlacesList(nearbyPlaces.getNearbyPlacesList());
+            nearbyListViewAdapter.notifyDataSetChanged();
         }
     }
 }

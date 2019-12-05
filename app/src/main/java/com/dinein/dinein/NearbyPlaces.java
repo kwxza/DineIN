@@ -68,8 +68,7 @@ public class NearbyPlaces extends Observable implements Observer {
 
     private String createDistanceUrl(LinkedHashMap<String, HashMap<String, String>> listUpdater) {
         StringBuilder distanceUrlBuilder = new StringBuilder("https://maps.googleapis.com/maps/api/distancematrix/json?");
-        Set<String> placeIds = listUpdater.keySet();
-        Iterator<String> placeIdsIterator = placeIds.iterator();
+        Iterator<String> placeIds = listUpdater.keySet().iterator();
 
         distanceUrlBuilder
                 .append("origins=")
@@ -79,11 +78,11 @@ public class NearbyPlaces extends Observable implements Observer {
                 .append("&mode=walking")
                 .append("&destinations=");
 
-        while (placeIdsIterator.hasNext()) {
+        while (placeIds.hasNext()) {
             distanceUrlBuilder
                     .append("place_id:")
-                    .append(placeIdsIterator.next());
-            if (placeIdsIterator.hasNext()) {
+                    .append(placeIds.next());
+            if (placeIds.hasNext()) {
                 distanceUrlBuilder.append("|");
             }
         }
@@ -123,6 +122,7 @@ public class NearbyPlaces extends Observable implements Observer {
                                         HashMap<String,String> place = new HashMap<>();
 
                                         place.put("name", results.getJSONObject(i).getString("name"));
+                                        place.put("place_id", results.getJSONObject(i).getString("place_id"));
                                         place.put("lat", results.getJSONObject(i).getJSONObject("geometry").getJSONObject("location").getString("lat"));
                                         place.put("lng", results.getJSONObject(i).getJSONObject("geometry").getJSONObject("location").getString("lng"));
                                         if (results.getJSONObject(i).has("rating")) {
@@ -143,8 +143,6 @@ public class NearbyPlaces extends Observable implements Observer {
                                         }, 2000);
                                     } else {
                                         getDistanceDataFromUrl(createDistanceUrl(listUpdater));
-                                        Log.d(TAG, "onResponse: listUpdater map: " + listUpdater.toString());
-                                        Log.d(TAG, "onResponse: listUpdater keySet: " + listUpdater.keySet().toString());
                                     }
                                     break;
 
@@ -199,14 +197,18 @@ public class NearbyPlaces extends Observable implements Observer {
                             if (status.equals("OK")) {
                                 JSONArray addresses = response.getJSONArray("destination_addresses");
                                 JSONArray distanceInfo = response.getJSONArray("rows").getJSONObject(0).getJSONArray("elements");
+                                Iterator<String> placeIds = listUpdater.keySet().iterator();
 
                                 for (int i = 0; i < addresses.length(); i++) {
-                                    if (distanceInfo.getJSONObject(i).getString("status").equals("OK")) {
-                                        listUpdater.get(i).put("address", addresses.getString(i).split(",")[0]);
-                                        listUpdater.get(i).put("distance", distanceInfo.getJSONObject(i).getJSONObject("distance").getString("text"));
-                                        listUpdater.get(i).put("duration", distanceInfo.getJSONObject(i).getJSONObject("duration").getString("text"));
+                                    if (placeIds.hasNext()) {
+                                        HashMap<String, String> place = listUpdater.get(placeIds.next());
+
+                                        place.put("address", addresses.getString(i).split(",")[0]);
+                                        place.put("distance", distanceInfo.getJSONObject(i).getJSONObject("distance").getString("text"));
+                                        place.put("duration", distanceInfo.getJSONObject(i).getJSONObject("duration").getString("text"));
                                     }
                                 }
+
                                 updateNearbyPlacesList(listUpdater);
                             } else {
                                 // TODO: Handle request error
@@ -242,27 +244,18 @@ public class NearbyPlaces extends Observable implements Observer {
         boolean newListIsDifferent = false;
         
         if (nearbyPlacesList.size() == listUpdater.size()) {
-            int index = 0;
-            while (!newListIsDifferent && index < nearbyPlacesList.size()) {
-                newListIsDifferent = !nearbyPlacesList.get(index).get("place_id").equals(listUpdater.get(index).get("place_id"));
-                if (newListIsDifferent) {
-                    Log.d(TAG, "updateNearbyPlacesList: newListIsDifferent @ index: " + index);
-                    Log.d(TAG, "updateNearbyPlacesList: nearbyPlace @ index: " + nearbyPlacesList.get(index).get("name"));
-                    Log.d(TAG, "updateNearbyPlacesList: listUpdate @ index: " + listUpdater.get(index).get("name"));
-                    Log.d(TAG, "updateNearbyPlacesList: nearbyList: " + nearbyPlacesList.toString());
-                    Log.d(TAG, "updateNearbyPlacesList: listUpdate: " + listUpdater.toString());
-                }
-                index++;
+            Iterator<String> newPlaceIds = listUpdater.keySet().iterator();
+
+            while(!newListIsDifferent && newPlaceIds.hasNext()) {
+                newListIsDifferent = !nearbyPlacesList.containsKey(newPlaceIds.next());
             }
         } else { newListIsDifferent = true; }
         
         if (newListIsDifferent || nearbyPlacesList.size() == 0) {
-            Log.d(TAG, "updateNearbyPlacesList: nearbyList size: " + nearbyPlacesList.size());
-            Log.d(TAG, "updateNearbyPlacesList: listUpdate size: " + listUpdater.size());
             nearbyPlacesList.clear();
             nearbyPlacesList.putAll(listUpdater);
             setChanged();
-            notifyObservers(nearbyPlacesList);
+            notifyObservers();
             Log.d(TAG, "updateNearbyPlacesList: list updated");
         }
     }
